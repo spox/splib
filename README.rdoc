@@ -1,0 +1,38 @@
+== Spox Library (splib)
+
+The Spox Library is collection of helper methods and classes.
+
+=== install (easy):
+
+    gem install splib
+
+=== install (less easy):
+
+    git clone http://github.com/spox/splib.git
+    cd splib
+    gem build *.gemspec
+    gem install ./
+
+=== install (less easy that's a little easier)
+
+{rip}[http://hellorip.com/about.html] makes it easy to install directly from a github repository.
+
+=== Usage
+
+The Spox Library has various things located within it. The Splib#load method will allow you to load individual parts of the library, or the entire thing into your program.
+
+    require 'splib'
+
+    Splib.load :UrlShorteners
+    puts Splib.tinyurl 'www.google.com'
+
+    => "http://tinyurl.com/2ty"
+
+== Last remarks
+
+If you find any bugs, please report them through {github}[http://github.com/spox/splib/issues]. If you are in need of any help, you can generally find me on DALnet and Freenode.
+
+== License
+
+    Spox Library is licensed under the MIT License
+    Copyright (c) 2009 spox <spox@modspox.com>
