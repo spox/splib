@@ -19,14 +19,114 @@ The Spox Library is collection of helper methods and classes.
 
 === Usage
 
-The Spox Library has various things located within it. The Splib#load method will allow you to load individual parts of the library, or the entire thing into your program.
+The Spox Library has various things located within it. The Splib#load method will allow you to load individual parts of the library, or the entire thing into your program. Lets take a quick look at some of the things available from this library.
+
+==== URL Shorteners
+
+Access to a variety of URL shortening services
 
     require 'splib'
 
     Splib.load :UrlShorteners
-    puts Splib.tinyurl 'www.google.com'
+    puts Splib.tiny_url 'www.google.com'
+    puts Splib.trim_url 'www.google.com'
+    puts Splib.isgd_url 'www.google.com'
+    puts Splib.shortest_url 'www.google.com'
 
-    => "http://tinyurl.com/2ty"
+    Results:
+
+    http://tinyurl.com/2ty
+    http://tr.im/Ig5f
+    http://is.gd/5wmJ1
+    http://tr.im/Ig5p
+
+==== Conversions
+
+Easy conversion for seconds and bytes to something more human readable
+
+    require 'splib'
+
+    Splib.load :Conversions
+    puts Splib.format_seconds 9999999
+    puts Splib.format_size 9999999999
+
+    Results:
+
+    3 months 3 weeks 1 day 17 hours 46 minutes 39 seconds
+    9.31 Gigabytes
+
+==== Exec
+
+Adding a bit of safety and ease of use to exec
+
+    require 'splib'
+
+    Splib.load :Exec
+    begin
+        Splib.exec('echo test', 10, 1)
+    rescue IOError
+        puts 'Exceeded allowed number of returned bytes'
+    end
+    begin
+        Splib.exec('while [ true ]; do true; done;', 1)
+    rescue Timeout::Error
+        puts 'Exceeded allowed running time'
+    end
+    puts Splib.exec('echo "hello world"')
+
+    Results:
+
+    Exceeded allowed number of returned bytes
+    Exceeded allowed running time
+    hello world
+
+==== Constants
+
+Find constants easily, especially within loaded modules
+
+    require 'splib'
+
+    Splib.load :Constants
+    mod = Module.new
+    mod.class_eval("
+        module Fu
+            class Bar
+            end
+        end"
+    )
+    p Splib.find_const('String')
+    p Splib.find_const('Fu::Bar', [mod])
+
+    Results:
+
+    String
+    #<Module:0x95f02a4>::Fu::Bar
+
+==== PriorityQueue
+
+Add some logic to item queueing
+
+    require 'splib'
+
+    Splib.load :PriorityQueue
+
+    queue = Splib::PriorityQueue.new{|s| s == :last }
+    queue.push(:last, 'last')
+    2.times{ queue.push(:slot1, 'test') }
+    2.times{ queue.push(:slot2, 'fubar') }
+    until(queue.empty?)
+        puts queue.pop
+    end
+
+    Results:
+
+    test
+    fubar
+    test
+    fubar
+    last
+
+==== TODO: Write examples for CodeReloader and RandomIterator
 
 == Last remarks
 
