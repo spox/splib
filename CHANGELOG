@@ -1,2 +1,6 @@
+1.1
+    * Added Splib.type_of? method to the Constants library
+    * Splib.find_const returns nil if constant not found
+    * Added Splib.find_const to the Constants library
 1.0
     * Initial release
