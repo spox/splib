@@ -1,4 +1,12 @@
 module Splib
+    # path:: path to file
+    # Read contents of file
+    def self.read_file(path)
+        file = File.open(path, 'rb')
+        cont = file.read
+        file.close
+        cont
+    end
     # path:: path to ruby file
     # type:: return constants only of given type
     # Find all constants in a given ruby file. Array of 
@@ -7,7 +15,7 @@ module Splib
         raise ArgumentError.new('Failed to locate plugin file') unless File.exists?(path)
         consts = []
         sandbox = Module.new
-        sandbox.module_eval(IO.binread(path))
+        sandbox.module_eval(self.read_file(path))
         sandbox.constants.each do |const|
             klass = sandbox.const_get(const)
             if(type.nil? || (type && klass < type))
@@ -27,7 +35,7 @@ module Splib
         else
             holder = self.create_holder(path)
         end
-        holder.module_eval(IO.binread(path))
+        holder.module_eval(self.read_file(path))
         holder
     end
 
