@@ -3,19 +3,21 @@ module Splib
     # Converts seconds into a human readable string (This is an estimate
     # and does not account for leaps)
     def self.format_seconds(secs)
-        arg = {:year => 31536000,
-                :month => 2678400,
-                :week => 604800,
-                :day => 86400,
-                :hour => 3600,
-                :minute => 60,
-                :second => 1}
+        arg = [{:year => 31536000},
+                {:month => 2678400},
+                {:week => 604800},
+                {:day => 86400},
+                {:hour => 3600},
+                {:minute => 60},
+                {:second => 1}]
         res = ''
-        arg.each_pair do |k,v|
-            z = (secs / v).to_i
-            next unless z > 0
-            res += " #{z} #{k}#{z == 1 ? '':'s'}"
-            secs = secs % v
+        arg.each do |val|
+            val.each_pair do |k,v|
+                z = (secs / v).to_i
+                next unless z > 0
+                res += " #{z} #{k}#{z == 1 ? '':'s'}"
+                secs = secs % v
+            end
         end
         res = '0 seconds' if res.empty?
         return res.strip
