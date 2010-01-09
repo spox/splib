@@ -1,3 +1,4 @@
+require 'thread'
 module Splib
     # Exception raised when queue is empty
     class EmptyQueue < Exception
