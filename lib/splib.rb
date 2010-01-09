@@ -1,5 +1,6 @@
 module Splib
-    LIBS = [:CodeReloader,
+    LIBS = [:Array,
+            :CodeReloader,
             :Constants,
             :Conversions,
             :Exec,
