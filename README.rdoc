@@ -17,6 +17,15 @@ The Spox Library is collection of helper methods and classes.
 
 {rip}[http://hellorip.com/about.html] makes it easy to install directly from a github repository.
 
+=== Testing
+
+This library has been tested on:
+
+* Ruby 1.8.6-p376
+* Ruby 1.8.7-p248
+* Ruby 1.9.1-p383
+* JRuby 1.4
+
 === Usage
 
 The Spox Library has various things located within it. The Splib#load method will allow you to load individual parts of the library, or the entire thing into your program. Lets take a quick look at some of the things available from this library.
