@@ -28,7 +28,7 @@ module Splib
     def self.type_of?(a, b)
         case b
         when String
-            if(a.class.to_s.slice(0) == '#')
+            if(a.class.to_s.slice(0).chr == '#')
                 name = a.class.to_s
                 return name.slice(name.index('::')+2, name.length) == b
             else
