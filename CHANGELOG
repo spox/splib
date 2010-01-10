@@ -1,3 +1,12 @@
+1.2
+    * Added Array#fixed_flatten for pre 1.9 versions
+    * Remove IO.binread from CodeReloader for pre 1.9 versions
+    * Use array for Conversion information storage since we
+        only have Hash ordering in 1.9
+    * Use #chr for pre 1.9
+    * Make Splib.exec a wrapper for normal and threaded versions
+        Check platform and use threaded version when on java
+        automatically
 1.1
     * Added Splib.type_of? method to the Constants library
     * Splib.find_const returns nil if constant not found
