@@ -1,35 +1,98 @@
 require 'timeout'
 
 module Splib
+
+    # command:: command string to execute
+    # timeout:: length of time to execute
+    # maxbytes:: maximum number return bytes allowed
+    # Execute system command. This is a wrapper method
+    # that will redirect to the proper command
+    def self.exec(*args)
+        if(RUBY_PLATFORM == 'java')
+            thread_exec(*args)
+        else
+            standard_exec(*args)
+        end
+    end
+    
     # command:: command to execute
     # timeout:: maximum number of seconds to run
     # maxbytes:: maximum number of result bytes to accept
     # Execute a system command (use with care)
-    def self.exec(command, timeout=10, maxbytes=500)
+    # This is the normal exec command that is used
+    def self.standard_exec(command, timeout=10, maxbytes=500)
+        timout = timeout.to_i
+        maxbytes = maxbytes.to_i
         output = []
         pro = nil
         begin
-            Timeout::timeout(timeout) do
+            if(timeout > 0)
+                Timeout::timeout(timeout) do
+                    pro = IO.popen(command)
+                    until(pro.closed? || pro.eof?)
+                        output << pro.getc.chr
+                        if(maxbytes > 0 && output.size > maxbytes)
+                            raise IOError.new("Maximum allowed output bytes exceeded. (#{maxbytes} bytes)")
+                        end
+                    end
+                end
+            else
                 pro = IO.popen(command)
                 until(pro.closed? || pro.eof?)
-                    if(RUBY_VERSION >= '1.9.0')
-                        output << pro.getc
-                    else
-                        output << pro.getc.chr
+                    output << pro.getc.chr
+                    if(maxbytes > 0 && output.size > maxbytes)
+                        raise IOError.new("Maximum allowed output bytes exceeded. (#{maxbytes} bytes)")
                     end
-                    raise IOError.new("Maximum allowed output bytes exceeded. (#{maxbytes} bytes)") unless output.size <= maxbytes
                 end
             end
             output = output.join('')
-        rescue Exception => boom
-            raise boom
         ensure
-            if(RUBY_PLATFORM == 'java')
-                Process.kill('KILL', pro.pid) unless pro.nil?
-            else
-                Process.kill('KILL', pro.pid) if Process.waitpid2(pro.pid, Process::WNOHANG).nil? # make sure the process is dead
-            end
+            Process.kill('KILL', pro.pid) if Process.waitpid2(pro.pid, Process::WNOHANG).nil? # make sure the process is dead
         end
         return output
+    end
+    # Used for the thread_exec method to notify of completion
+    class Complete < StandardError
+    end
+
+    # command:: command to execute
+    # timeout:: maximum number of seconds to run
+    # maxbytes:: maximum number of result bytes to accept
+    # Execute a system command (use with care)
+    # This is the threaded exec command that is generally used
+    # with JRuby. The regular timeout does not work when executing
+    # a process, so we do it in a separate thread and sleep the main
+    # thread until the timeout is reached.
+    def self.thread_exec(command, timeout=10, maxbytes=500)
+        timeout = timeout.to_i
+        maxbytes = maxbytes.to_i
+        current = Thread.current
+        output = []
+        pro = nil
+        thread = Thread.new do
+            boom = Complete.new
+            begin
+                pro = IO.popen(command)
+                until(pro.closed? || pro.eof?)
+                    output << pro.getc.chr
+                    if(maxbytes > 0 && output.size > maxbytes)
+                        raise IOError.new("Maximum allowed output bytes exceeded. (#{maxbytes} bytes)")
+                    end
+                end
+            rescue Exception => boom
+                # just want it set
+            end
+            current.raise boom unless boom.is_a?(Timeout::Error)
+        end
+        begin
+            timeout > 0 ? sleep(timeout) : sleep
+            thread.raise Timeout::Error.new
+            raise Timeout::Error.new
+        rescue Complete
+            # do nothing
+        ensure
+            Process.kill('KILL', pro.pid) unless pro.nil?
+        end
+        output.join('')
     end
 end
