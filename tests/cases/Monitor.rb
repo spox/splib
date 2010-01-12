@@ -17,6 +17,20 @@ class MonitorTest < Test::Unit::TestCase
         end
     end
 
+    def test_wait_timeout
+        t = []
+        o = []
+        5.times{|i| t << Thread.new{ @monitor.wait((i+1)/100.0); o << 1 } }
+        sleep(0.011)
+        assert(!t.shift.alive?)
+        assert_equal(1, o.size)
+        sleep(0.11)
+        assert_equal(5, o.size)
+        t.each do |th|
+            assert(!th.alive?)
+        end
+    end
+
     def test_signal
         output = []
         t = []
