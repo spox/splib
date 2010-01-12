@@ -13,6 +13,7 @@ module Splib
         # Park a thread here
         def wait(timeout=nil)
             if(timeout)
+                timout = timeout.to_f
                 @timers[Thread.current] = Thread.new(Thread.current) do |t|
                     sleep(timeout)
                     t.wakeup
