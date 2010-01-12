@@ -5,6 +5,7 @@ module Splib
             :Conversions,
             :Exec,
             :HumanIdealRandomIterator,
+            :Monitor,
             :PriorityQueue,
             :UrlShorteners
            ]
