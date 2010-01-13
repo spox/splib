@@ -4,6 +4,7 @@ module Splib
             :Constants,
             :Conversions,
             :Exec,
+            :Float,
             :HumanIdealRandomIterator,
             :Monitor,
             :PriorityQueue,
