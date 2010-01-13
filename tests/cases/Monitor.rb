@@ -21,7 +21,7 @@ class MonitorTest < Test::Unit::TestCase
         t = []
         o = []
         5.times{|i| t << Thread.new{ @monitor.wait((i+1)/100.0); o << 1 } }
-        sleep(0.011)
+        sleep(0.015)
         assert(!t.shift.alive?)
         assert_equal(1, o.size)
         sleep(0.11)
