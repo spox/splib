@@ -46,7 +46,7 @@ module Splib
         def signal
             synchronize do
                 t = @threads.shift
-                t.wakeup if t.alive?
+                t.wakeup if t && t.alive?
             end
         end
         # Wake up all threads
@@ -69,6 +69,10 @@ module Splib
         # Unlock the monitor
         def unlock
             Thread.exclusive{ do_unlock }
+        end
+        # Is monitor locked
+        def locked?
+            @locks.size > 0
         end
         # Lock the monitor, execute block and unlock the monitor
         def synchronize
