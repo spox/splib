@@ -1,6 +1,8 @@
 1.4
     * Clean up exclusive usage in Monitor
     * Add a timeout on Monitor#wait
+    * Add Monitor#locked?
+    * Add Float library to define Float#within_delta?
 1.3
     * Add simple monitor
 1.2
