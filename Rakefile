@@ -12,18 +12,19 @@ require 'rake/testtask'
 require 'spec/rake/spectask'
 
 spec = Gem::Specification.new do |s|
-  s.name = 'splib'
-  s.version = '1.4'
-  s.has_rdoc = true
-  s.extra_rdoc_files = ['README.rdoc', 'LICENSE', 'CHANGELOG']
-  s.summary = 'The spox library contains various useful tools to help you in your day to day life. Like a trusty pocket knife, only more computery.'
-  s.description = s.summary
-  s.author = 'spox'
-  s.email = 'spox@modspox.com'
-  # s.executables = ['your_executable_here']
-  s.files = %w(LICENSE README.rdoc CHANGELOG Rakefile) + Dir.glob("{bin,lib,spec}/**/*")
-  s.require_path = "lib"
-  s.bindir = "bin"
+    s.name              = 'splib'
+    s.author            = 'spox'
+    s.email             = 'spox@modspox.com'
+    s.version           = '1.4'
+    s.summary           = 'Spox Library'
+    s.platform          = Gem::Platform::RUBY
+    s.files             = Dir['**/*']
+    s.rdoc_options      = %w(--title splib --main README.rdoc --line-numbers)
+    s.extra_rdoc_files  = %w(README.rdoc CHANGELOG)
+    s.require_paths     = %w(lib)
+    s.required_ruby_version = '>= 1.8.6'
+    s.homepage          = %q(http://github.com/spox/splib)
+    s.description         = "The spox library contains various useful tools to help you in your day to day life. Like a trusty pocket knife, only more computery."
 end
 
 Rake::GemPackageTask.new(spec) do |p|
