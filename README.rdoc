@@ -104,12 +104,17 @@ Find constants easily, especially within loaded modules
         end"
     )
     p Splib.find_const('String')
-    p Splib.find_const('Fu::Bar', [mod])
+    fb = Splib.find_const('Fu::Bar', [mod]).new
+    p fb
+    p Splib.type_of?(fb, 'Fu::Bar')
+
 
     Results:
 
     String
-    #<Module:0x95f02a4>::Fu::Bar
+    #<#<Module:0x95f2fd0>::Fu::Bar:0x95f287c>
+    true
+
 
 ==== PriorityQueue
 
@@ -134,6 +139,50 @@ Add some logic to item queueing
     test
     fubar
     last
+
+==== Float
+
+Need to know if your float is within a delta?
+
+    require 'splib'
+    Splib.load :Float
+
+    p 4.21.within_delta?(:expected => 4.30, :delta => 0.1)
+
+    => true
+
+==== Monitor
+
+Annoyed that your monitor is generating thread owner errors? This simple
+monitor does its best to ensure your threads stay where they are supposed.
+
+    require 'splib'
+    Splib.load :Monitor
+
+    output = []
+    go = false
+    monitor = Splib::Monitor.new
+    Thread.new{ monitor.wait_until{go}; output << :foo}
+    Thread.new{ monitor.wait_while{!go}; output << :bar}
+    Thread.new{ monitor.wait; output << :foobar }
+    Thread.pass
+    monitor.broadcast
+    Thread.pass
+    p output
+    go = true
+    monitor.signal
+    Thread.pass
+    p output
+    Thread.pass
+    monitor.broadcast
+    Thread.pass
+    p output
+
+    Results:
+
+    [:foobar]
+    [:foobar, :foo]
+    [:foobar, :foo, :bar]
 
 ==== TODO: Write examples for CodeReloader and RandomIterator
 
