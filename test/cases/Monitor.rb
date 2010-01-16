@@ -21,10 +21,11 @@ class MonitorTest < Test::Unit::TestCase
         t = []
         o = []
         5.times{|i| t << Thread.new{ @monitor.wait((i+1)/100.0); o << 1 } }
-        sleep(0.015)
+        sleep(0.01)
+        Thread.pass
         assert(!t.shift.alive?)
         assert_equal(1, o.size)
-        sleep(0.11)
+        sleep(0.1)
         assert_equal(5, o.size)
         t.each do |th|
             assert(!th.alive?)
@@ -121,17 +122,10 @@ class MonitorTest < Test::Unit::TestCase
         t = []
         output = []
         5.times{|i| t << Thread.new{ @monitor.lock; sleep((i+1)/100.0); output << i; @monitor.unlock;}}
-        sleep(0.011)
+        sleep(0.051)
         assert_equal(5, t.size)
-        assert_equal(0, output.pop)
-        sleep(0.011)
-        assert_equal(1, output.pop)
-        sleep(0.011)
-        assert_equal(2, output.pop)
-        sleep(0.011)
-        assert_equal(3, output.pop)
-        sleep(0.011)
-        assert_equal(4, output.pop)
+        assert(!t.any?{|th|th.alive?})
+        5.times{|i|assert_equal(i, output.shift)}
     end
 
     def synchronize
