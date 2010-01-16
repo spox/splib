@@ -64,7 +64,11 @@ module Splib
         end
         # Lock the monitor
         def lock
-            Thread.stop if Thread.exclusive{ do_lock }
+            if(Thread.exclusive{do_lock})
+                until(owner?(Thread.current)) do
+                    Thread.stop
+                end
+            end
         end
         # Unlock the monitor
         def unlock
