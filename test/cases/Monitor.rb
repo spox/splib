@@ -22,7 +22,6 @@ class MonitorTest < Test::Unit::TestCase
         o = []
         5.times{|i| t << Thread.new{ @monitor.wait((i+1)/100.0); o << 1 } }
         sleep(0.01)
-        Thread.pass
         assert(!t.shift.alive?)
         assert_equal(1, o.size)
         sleep(0.1)
@@ -116,6 +115,20 @@ class MonitorTest < Test::Unit::TestCase
         @monitor.broadcast
         sleep(0.01)
         assert_equal(0, @monitor.waiters)
+    end
+
+    def test_wait_outside_wakeup
+        output = nil
+        t = Thread.new{@monitor.wait; output = true}
+        assert(t.alive?)
+        assert_nil(output)
+        t.wakeup
+        assert(t.alive?)
+        assert_nil(output)
+        @monitor.signal
+        sleep(0.01)
+        assert(output)
+        assert(!t.alive?)
     end
 
     def test_lock_unlock
