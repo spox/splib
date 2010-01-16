@@ -162,11 +162,12 @@ monitor does its best to ensure your threads stay where they are supposed.
     output = []
     go = false
     monitor = Splib::Monitor.new
-    Thread.new{ monitor.wait_until{go}; output << :foo}
+    t = Thread.new{ monitor.wait_until{go}; output << :foo}
     Thread.new{ monitor.wait_while{!go}; output << :bar}
     Thread.new{ monitor.wait; output << :foobar }
     Thread.pass
     monitor.broadcast
+    t.wakeup
     Thread.pass
     p output
     go = true
