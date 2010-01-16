@@ -15,7 +15,12 @@ module Splib
             if(timeout)
                 timout = timeout.to_f
                 @timers[Thread.current] = Thread.new(Thread.current) do |t|
-                    sleep(timeout)
+                    time = 0.0
+                    until(time >= timeout) do
+                        s = Time.now.to_f
+                        sleep(timeout - time)
+                        time += Time.now.to_f - s
+                    end
                     t.wakeup
                 end
             end
