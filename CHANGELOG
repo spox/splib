@@ -1,3 +1,6 @@
+1.4.1
+    * Updates in Monitor to attempt to force
+        threads to stay put
 1.4
     * Clean up exclusive usage in Monitor
     * Add a timeout on Monitor#wait
