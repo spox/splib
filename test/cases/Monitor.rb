@@ -21,7 +21,8 @@ class MonitorTest < Test::Unit::TestCase
         t = []
         o = []
         5.times{|i| t << Thread.new{ @monitor.wait((i+1)/100.0); o << 1 } }
-        sleep(0.01)
+        sleep(0.011)
+        Thread.pass
         assert(!t.shift.alive?)
         assert_equal(1, o.size)
         sleep(0.1)
@@ -117,28 +118,31 @@ class MonitorTest < Test::Unit::TestCase
         assert_equal(0, @monitor.waiters)
     end
 
-    def test_wait_outside_wakeup
-        output = nil
-        t = Thread.new{@monitor.wait; output = true}
-        assert(t.alive?)
-        assert_nil(output)
-        t.wakeup
-        assert(t.alive?)
-        assert_nil(output)
-        @monitor.signal
-        sleep(0.01)
-        assert(output)
-        assert(!t.alive?)
-    end
-
     def test_lock_unlock
         t = []
         output = []
-        5.times{|i| t << Thread.new{ @monitor.lock; sleep((i+1)/100.0); output << i; @monitor.unlock;}}
-        sleep(0.051)
-        assert_equal(5, t.size)
+        3.times{|i| t << Thread.new{ @monitor.lock; sleep((i+1)/100.0); output << i; @monitor.unlock;}}
+        sleep(0.011)
+        assert_equal(1, output.size)
+        sleep(0.021)
+        assert_equal(2, output.size)
+        sleep(0.031)
+        assert_equal(3, output.size)
         assert(!t.any?{|th|th.alive?})
-        5.times{|i|assert_equal(i, output.shift)}
+        3.times{|i|assert_equal(i, output.shift)}
+    end
+    
+    def test_lock_unlock_wakeup
+        complete = false
+        t1 = Thread.new{@monitor.lock; sleep(0.1); @monitor.unlock}
+        t2 = Thread.new{@monitor.lock; complete = true; @monitor.unlock}
+        assert(!complete)
+        assert(t1.alive?)
+        t2.wakeup
+        Thread.pass
+        assert(!complete)
+        sleep(0.11)
+        assert(complete)
     end
 
     def synchronize
