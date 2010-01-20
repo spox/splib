@@ -96,9 +96,13 @@ module Splib
 
         private
 
+        def owner?(t)
+            @lock_owner == t
+        end
+
         def do_lock
             stop = false
-            unless(@locks.empty?)
+            if(@lock_owner)
                 @locks << Thread.current
                 stop = true
             else
@@ -108,11 +112,11 @@ module Splib
         end
 
         def do_unlock
-            unless(@lock_owner == Thread.current)
+            unless(owner?(Thread.current))
                 raise ThreadError.new("Thread #{Thread.current} is not the current owner: #{@lock_owner}")
             end
             unless(@locks.empty?)
-                @locks.delete{|t|!t.alive?}
+                @locks.delete_if{|t|!t.alive?}
                 @lock_owner = @locks.shift
                 @lock_owner.wakeup
             else
