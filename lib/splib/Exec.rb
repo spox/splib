@@ -18,17 +18,22 @@ module Splib
     # command:: command to execute
     # timeout:: maximum number of seconds to run
     # maxbytes:: maximum number of result bytes to accept
+    # priority:: set priority of the process
     # Execute a system command (use with care)
     # This is the normal exec command that is used
-    def self.standard_exec(command, timeout=10, maxbytes=500)
-        timout = timeout.to_i
+    def self.standard_exec(command, timeout=10, maxbytes=500, priority=nil)
+        timeout = timeout.to_i
         maxbytes = maxbytes.to_i
+        priority = priority.to_i
         output = []
         pro = nil
         begin
             if(timeout > 0)
                 Timeout::timeout(timeout) do
                     pro = IO.popen(command)
+                    if(priority > 0)
+                        Process.setpriority(Process::PRIO_PROCESS, pro.pid, priority)
+                    end
                     until(pro.closed? || pro.eof?)
                         output << pro.getc.chr
                         if(maxbytes > 0 && output.size > maxbytes)
@@ -58,6 +63,7 @@ module Splib
     # command:: command to execute
     # timeout:: maximum number of seconds to run
     # maxbytes:: maximum number of result bytes to accept
+    # priority:: set priority of the process
     # Execute a system command (use with care)
     # This is the threaded exec command that is generally used
     # with JRuby. The regular timeout does not work when executing
@@ -66,6 +72,7 @@ module Splib
     def self.thread_exec(command, timeout=10, maxbytes=500)
         timeout = timeout.to_i
         maxbytes = maxbytes.to_i
+        priority = priority.to_i
         current = Thread.current
         output = []
         pro = nil
@@ -73,6 +80,9 @@ module Splib
             boom = Complete.new
             begin
                 pro = IO.popen(command)
+                if(priority > 0)
+                    Process.setpriority(Process::PRIO_PROCESS, pro.pid, priority)
+                end
                 until(pro.closed? || pro.eof?)
                     output << pro.getc.chr
                     if(maxbytes > 0 && output.size > maxbytes)
