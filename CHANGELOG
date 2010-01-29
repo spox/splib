@@ -1,4 +1,6 @@
 1.4.2
+    * Modify Float#within_delta? to use #between? like any
+        reasonable person would
     * Add a priority setting for Splib.exec
     * Add process tracking with Splib.exec so we don't leave
         children laying around if we get shutdown
