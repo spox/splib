@@ -1,5 +1,7 @@
 1.4.2
     * Add a priority setting for Splib.exec
+    * Add process tracking with Splib.exec so we don't leave
+        children laying around if we get shutdown
 1.4.1
     * Updates in Monitor to attempt to force
         threads to stay put

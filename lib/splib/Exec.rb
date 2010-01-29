@@ -2,6 +2,9 @@ require 'timeout'
 
 module Splib
 
+    @@processes = []
+    Kernel.at_exit{@@processes.each{|p| Process.kill('KILL', pro.pid) }}
+
     # command:: command string to execute
     # timeout:: length of time to execute
     # maxbytes:: maximum number return bytes allowed
@@ -31,6 +34,7 @@ module Splib
             if(timeout > 0)
                 Timeout::timeout(timeout) do
                     pro = IO.popen(command)
+                    @@processes << pro
                     if(priority > 0)
                         Process.setpriority(Process::PRIO_PROCESS, pro.pid, priority)
                     end
@@ -43,6 +47,7 @@ module Splib
                 end
             else
                 pro = IO.popen(command)
+                @@processes << pro
                 until(pro.closed? || pro.eof?)
                     output << pro.getc.chr
                     if(maxbytes > 0 && output.size > maxbytes)
@@ -53,6 +58,7 @@ module Splib
             output = output.join('')
         ensure
             Process.kill('KILL', pro.pid) if Process.waitpid2(pro.pid, Process::WNOHANG).nil? # make sure the process is dead
+            @@processes.delete(pro)
         end
         return output
     end
@@ -80,6 +86,7 @@ module Splib
             boom = Complete.new
             begin
                 pro = IO.popen(command)
+                @@processes << pro
                 if(priority > 0)
                     Process.setpriority(Process::PRIO_PROCESS, pro.pid, priority)
                 end
@@ -102,6 +109,7 @@ module Splib
             # do nothing
         ensure
             Process.kill('KILL', pro.pid) unless pro.nil?
+            @@processes.delete(pro)
         end
         output.join('')
     end
