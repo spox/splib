@@ -5,6 +5,10 @@ module Splib
     @@processes = []
     Kernel.at_exit{@@processes.each{|p| Process.kill('KILL', pro.pid) }}
 
+    # Returns current array of running Processes
+    def self.running_procs
+        @@processes
+    end
     # command:: command string to execute
     # timeout:: length of time to execute
     # maxbytes:: maximum number return bytes allowed
@@ -102,11 +106,18 @@ module Splib
             current.raise boom unless boom.is_a?(Timeout::Error)
         end
         begin
-            timeout > 0 ? sleep(timeout) : sleep
-            thread.raise Timeout::Error.new
-            raise Timeout::Error.new
-        rescue Complete
-            # do nothing
+            begin
+                if(timeout > 0)
+                    thread.join(timeout)
+                    thread.raise Timeout::Error.new
+                    raise Timeout::Error.new
+                else
+                    thread.join
+                end
+                output.join('')
+            rescue Complete
+                # ignore this exception
+            end
         ensure
             Process.kill('KILL', pro.pid) unless pro.nil?
             @@processes.delete(pro)
