@@ -3,7 +3,12 @@ require 'timeout'
 module Splib
 
     @@processes = []
-    Kernel.at_exit{@@processes.each{|pro| Process.kill('KILL', pro.pid) }}
+    @@owner ||= Thread.current
+    Kernel.at_exit do
+        if(Thread.current == @@owner)
+            @@processes.each{|pro| Process.kill('KILL', pro.pid) }
+        end
+    end
 
     # Returns current array of running Processes
     def self.running_procs
