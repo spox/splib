@@ -1,7 +1,8 @@
-require 'thread'
+Splib.load :Monitor
+
 module Splib
     # Exception raised when queue is empty
-    class EmptyQueue < Exception
+    class EmptyQueue < RuntimeError
     end
     # This class provides some simple logic for item output. It is
     # basically a priority based queue with some round robin thrown
@@ -19,7 +20,8 @@ module Splib
             @whocares = whocares
             @target_queues = {}
             @queues = {:PRIORITY => [], :NEW => [], :NORMAL => [], :WHOCARES => []}
-            @lock = Mutex.new
+            @lock = Splib::Monitor.new
+            @waiters = Splib::Monitor.new
         end
         
         # target:: target queue
@@ -42,6 +44,7 @@ module Splib
                         add_queue(:NORMAL, @target_queues[target])
                     end
                 end
+                @waiters.broadcast
             end
             item
         end
@@ -54,6 +57,7 @@ module Splib
                 @target_queues[:internal_prio] = [] unless @target_queues[:internal_prio]
                 @target_queues[:internal_prio] << message
                 add_queue(:PRIORITY, @target_queues[:internal_prio])
+                @waiters.broadcast
             end
             message
         end
@@ -77,8 +81,15 @@ module Splib
                     end
                 end
             end
-            raise EmptyQueue.new('Queue is currently empty') if m.nil? && @raise
-            return m
+            unless(m)
+                if(@raise)
+                    raise EmptyQueue.new('Queue is currently empty')
+                else
+                    @waiters.wait_while{ empty? }
+                    m = pop
+                end
+            end
+            m
         end
 
         # Returns true if queue is empty
@@ -87,6 +98,7 @@ module Splib
         end
 
         alias :push :prioritized_queue
+        alias :<< :direct_queue
 
         private
         
