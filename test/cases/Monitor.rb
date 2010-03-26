@@ -153,5 +153,15 @@ class MonitorTest < Test::Unit::TestCase
         sleep(0.5)
         assert_equal(6, output.size)
     end
+    
+    def test_try_lock
+        assert(@monitor.try_lock)
+        assert(@monitor.locked?)
+        assert(@monitor.try_lock)
+        Thread.new{ assert(!@monitor.try_lock) }
+        @monitor.unlock
+        assert(!@monitor.locked?)
+        Thread.new{ assert(@monitor.try_lock); @monitor.unlock }
+    end
 
 end
