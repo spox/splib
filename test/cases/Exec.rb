@@ -19,7 +19,7 @@ class ExecTest < Test::Unit::TestCase
     def test_running
         output = nil
         Thread.new do
-            output = Splib.exec('ruby -e \'sleep(0.4); puts "done"\'')
+            output = Splib.exec('/bin/sh -c "sleep 0.4; echo \\"done\\""')
         end
         sleep(0.1)
         assert_equal(1, Splib.running_procs.size)
