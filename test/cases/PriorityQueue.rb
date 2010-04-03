@@ -50,22 +50,24 @@ class PriorityQueueTest < Test::Unit::TestCase
 
     def test_waiters
         queue = Splib::PriorityQueue.new
-        t = Thread.new{ queue.pop }
+        q = Queue.new
+        t = Thread.new{ q << queue.pop; }
         assert(t.alive?)
-        queue << :item
-        sleep(0.3)
-        assert(!t.alive?)
+        queue << :item1
+        sleep(0.1)
+        assert_equal(:item1, q.pop)
         t = []
-        5.times{ t << Thread.new{ queue.pop } }
+        5.times{ t << Thread.new{ q << queue.pop } }
+        sleep(0.1)
         assert_equal(5, t.find_all{|x|x.alive?}.size)
-        queue << :item
-        sleep(0.3)
-        assert_equal(4, t.find_all{|x|x.alive?}.size)
-        queue.push(:foo, :item)
-        sleep(0.3)
-        assert_equal(3, t.find_all{|x|x.alive?}.size)
-        3.times{ queue << :item }
-        sleep(0.3)
-        assert_equal(0, t.find_all{|x|x.alive?}.size)
+        queue << :item2
+        sleep(0.1)
+        assert_equal(1, q.size)
+        queue.push(:foo, :item3)
+        sleep(0.1)
+        assert_equal(2, q.size)
+        3.times{ queue << :item4 }
+        sleep(0.1)
+        assert_equal(5, q.size)
     end
 end
