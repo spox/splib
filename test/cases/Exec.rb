@@ -4,6 +4,7 @@ require 'test/unit'
 class ExecTest < Test::Unit::TestCase
     def setup
         Splib.load :Exec
+        Splib.load :Sleep
     end
 
     def test_exec
@@ -21,9 +22,9 @@ class ExecTest < Test::Unit::TestCase
         Thread.new do
             output = Splib.exec('/bin/sh -c "sleep 0.4; echo done"')
         end
-        sleep(0.1)
+        Kernel.sleep(0.1)
         assert_equal(1, Splib.running_procs.size)
-        sleep(0.5)
+        Kernel.sleep(0.5)
         assert_equal("done\n", output)
         assert_equal(0, Splib.running_procs.size)
     end
