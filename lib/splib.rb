@@ -8,6 +8,7 @@ module Splib
             :HumanIdealRandomIterator,
             :Monitor,
             :PriorityQueue,
+            :Sleep,
             :UrlShorteners
            ]
     # args:: name of library to load
