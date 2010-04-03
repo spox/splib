@@ -21,7 +21,6 @@ module Splib
             @target_queues = {}
             @queues = {:PRIORITY => [], :NEW => [], :NORMAL => [], :WHOCARES => []}
             @lock = Splib::Monitor.new
-            @waiters = Splib::Monitor.new
         end
         
         # target:: target queue
@@ -44,7 +43,7 @@ module Splib
                         add_queue(:NORMAL, @target_queues[target])
                     end
                 end
-                @waiters.broadcast
+                @lock.signal
             end
             item
         end
@@ -57,7 +56,7 @@ module Splib
                 @target_queues[:internal_prio] = [] unless @target_queues[:internal_prio]
                 @target_queues[:internal_prio] << message
                 add_queue(:PRIORITY, @target_queues[:internal_prio])
-                @waiters.broadcast
+                @lock.signal
             end
             message
         end
@@ -85,7 +84,7 @@ module Splib
                 if(@raise)
                     raise EmptyQueue.new('Queue is currently empty')
                 else
-                    @waiters.wait_while{ empty? }
+                    @lock.wait_while{ empty? }
                     m = pop
                 end
             end
