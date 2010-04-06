@@ -1,37 +1,42 @@
 require 'thread'
 
 module Splib
-    
+    Splib.load :Sleep
+    # Basic exception to wakeup a monitor timer
+    class Wakeup < Exception
+    end
     class Monitor
+        # Create a new Monitor
         def initialize
             @threads = []
             @locks = []
             @lock_owner = nil
             @timers = {}
+            @timer = start_timer
+            @stop = false
+            Kernel.at_exit do
+                if(@timer)
+                    @stop = true
+                    @timer.raise Wakeup.new
+                end
+            end
         end
+
         # timeout:: Wait for given amount of time
         # Park a thread here
         def wait(timeout=nil)
+            raise 'This thread is already a registered sleeper' if @threads.include?(Thread.current)
+            Thread.exclusive{ @threads << Thread.current }
             if(timeout)
                 timeout = timeout.to_f
-                @timers[Thread.current] = Thread.new(Thread.current) do |t|
-                    time = 0.0
-                    until(time >= timeout) do
-                        s = Time.now.to_f
-                        sleep(timeout - time)
-                        time += Time.now.to_f - s
-                    end
-                    t.wakeup
-                end
+                Thread.exclusive{ @timers[Thread.current] = timeout }
+                @timer.raise Wakeup.new
             end
-            @threads << Thread.current
             Thread.stop
-            @threads.delete(Thread.current)
-            if(timeout)
-                if(@timers[Thread.current].alive?)
-                    @timers[Thread.current].kill
-                end
-                @timers.delete(Thread.current)
+            Thread.exclusive{ @threads.delete(Thread.current) }
+            if(timeout && @timers.has_key?(Thread.current))
+                Thread.exclusive{ @timers.delete(Thread.current) }
+                @timer.raise Wakeup.new
             end
             true
         end
@@ -49,19 +54,24 @@ module Splib
         end
         # Wake up earliest thread
         def signal
-            do_lock
-            t = @threads.shift
-            t.wakeup if t && t.alive?
-            do_unlock
+            synchronize do
+                while(t = @threads.shift)
+                    if(t && t.alive? && t.stop?)
+                        t.wakeup
+                        break
+                    else
+                        next
+                    end
+                end
+            end
         end
         # Wake up all threads
         def broadcast
-            do_lock
-            @threads.each do |t|
-                t.wakeup if t.alive?
+            synchronize do
+                @threads.dup.each do |t|
+                    t.wakeup if t.alive? && t.stop?
+                end
             end
-            @threads.clear
-            do_unlock
         end
         # Number of threads waiting
         def waiters
@@ -69,21 +79,21 @@ module Splib
         end
         # Lock the monitor
         def lock
-            if(Thread.exclusive{do_lock})
-                until(owner?(Thread.current)) do
-                    Thread.stop
-                end
+            Thread.exclusive{ do_lock }
+            until(owner?(Thread.current)) do
+                Thread.stop
             end
         end
         # Unlock the monitor
         def unlock
-            Thread.exclusive{ do_unlock }
+            do_unlock
         end
         # Attempt to lock. Returns true if lock is aquired and false if not.
         def try_lock
             locked = false
             Thread.exclusive do
-                unless(locked?)
+                clean
+                unless(locked?(false))
                     do_lock
                     locked = true
                 else
@@ -92,23 +102,23 @@ module Splib
             end
             locked
         end
+        # cln:: Clean dead threads
         # Is monitor locked
-        def locked?
-            clean
+        def locked?(cln=true)
+            Thread.exclusive{clean} if cln
             @locks.size > 0 || @lock_owner
         end
         # Lock the monitor, execute block and unlock the monitor
         def synchronize
             result = nil
-            Thread.exclusive do
-                do_lock
-                result = yield
-                do_unlock
-            end
+            lock
+            result = yield
+            do_unlock
             result
         end
 
         private
+
 
         # This is a simple helper method to help keep threads from ending
         # up stuck waiting for a lock when a thread locks the monitor and
@@ -119,36 +129,85 @@ module Splib
             @locks.delete_if{|t|!t.alive?}
             if(@lock_owner && !@lock_owner.alive?)
                 @lock_owner = @locks.empty? ? nil : @locks.shift
-                @lock_owner.wakeup if @lock_owner
+                @lock_owner.wakeup if @lock_owner && !owner?(Thread.current)
             end
         end
 
+        # Check if the givin thread is the current owner
         def owner?(t)
             @lock_owner == t
         end
 
+        # Aquire monitor lock or be queued for lock
+        # NOTE: To make this method more generic and useful, it does
+        # not perform a Thread.exclusive, and as such this method should
+        # only be called from within a Thread.exclusive{}
         def do_lock
             clean
-            stop = false
             if(@lock_owner)
-                @locks << Thread.current
-                stop = true
+                if(owner?(Thread.current))
+                    @locks.unshift(Thread.current)
+                else
+                    @locks << Thread.current
+                end
             else
                 @lock_owner = Thread.current
             end
-            stop
+            true
         end
 
+        # Unlock the monitor
         def do_unlock
             unless(owner?(Thread.current))
                 raise ThreadError.new("Thread #{Thread.current} is not the current owner: #{@lock_owner}")
             end
-            @locks.delete_if{|t|!t.alive?}
-            unless(@locks.empty?)
-                @lock_owner = @locks.shift
-                @lock_owner.wakeup
-            else
-                @lock_owner = nil
+            Thread.exclusive do
+                @locks.delete_if{|t|!t.alive?}
+                unless(@locks.empty?)
+                    old_owner = @lock_owner
+                    @lock_owner = @locks.shift
+                    @lock_owner.wakeup unless old_owner == @lock_owner
+                else
+                    @lock_owner = nil
+                end
+            end
+        end
+
+        # Starts the timer for waiting threads with a timeout
+        def start_timer
+            @timer = Thread.new do
+                begin
+                    until(@stop) do
+                        cur = []
+                        t = 0
+                        Thread.exclusive do
+                            t = @timers.values.min
+                            cur = @timers.dup
+                        end
+                        t = 0 if !t.nil? && t < 0
+                        a = 0
+                        begin
+                            a = Splib.sleep(t)
+                        rescue Wakeup
+                            # do nothing of importance
+                        ensure
+                            next if t.nil?
+                            Thread.exclusive do
+                                cur.each_pair do |thread, value|
+                                    value -= a
+                                    if(value <= 0)
+                                        thread.wakeup
+                                        @timers.delete(thread)
+                                    else
+                                        @timers[thread] = value
+                                    end
+                                end
+                            end
+                        end
+                    end
+                rescue
+                    retry
+                end
             end
         end
     end
