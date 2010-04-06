@@ -43,10 +43,7 @@ module Splib
     # Reload the code within the module
     def self.reload_code(holder)
         raise ArgumentError.new('Expecting a module containing loaded code') unless holder.respond_to?(:path)
-        holder.constants.each do |const|
-            holder.send(:remove_const, const)
-        end
-        self.load_code(holder.path, holder)
+        self.load_code(holder.path)
     end
 
     # path:: path to ruby code
