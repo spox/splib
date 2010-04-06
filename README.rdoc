@@ -21,14 +21,14 @@ The Spox Library is collection of helper methods and classes.
 
 This library has been tested on:
 
-* Ruby 1.8.6-p376
-* Ruby 1.8.7-p248
-* Ruby 1.9.1-p383
-* JRuby 1.4
+* Ruby 1.8.6-p399
+* Ruby 1.8.7-p249
+* Ruby 1.9.1-p378
+* JRuby 1.4.0
 
 === Usage
 
-The Spox Library has various things located within it. The Splib#load method will allow you to load individual parts of the library, or the entire thing into your program. Lets take a quick look at some of the things available from this library.
+The Spox Library has various things located within it. The Splib#load method will allow you to load individual parts of the library, or the entire thing, into your program. Lets take a quick look at some of the things available from this library.
 
 ==== URL Shorteners
 
@@ -185,7 +185,75 @@ monitor does its best to ensure your threads stay where they are supposed.
     [:foobar, :foo]
     [:foobar, :foo, :bar]
 
-==== TODO: Write examples for CodeReloader and RandomIterator
+The monitor also provides simple wait timers. See the following code:
+
+    require 'splib'
+    Splib.load :Monitor
+
+    monitor = Splib::Monitor.new
+    a = Queue.new
+    5.times{ Thread.new{ monitor.wait(0.1); a << 1; } }
+    sleep(0.2)
+    puts "Size: #{a.size}"
+
+Here we have five threads waiting with a timeout. Nicely, the monitor only uses
+a single thread for timing, instead of generating a new thread for each timeout.
+
+==== Sleep
+
+Make getting an actual amount of sleeping a bit easier:
+
+    require 'splib'
+    Splib.load :Sleep
+
+    puts Kernel.sleep(0.01)
+    puts Splib.sleep(0.01)
+
+    =>
+        0
+        0.00228595733642578
+
+==== CodeReloader
+
+Easily reload code into a module:
+
+First, assume that file.rb starts out with the following contents:
+
+    class Foo
+        def test
+            puts 'Test'
+        end
+    end
+
+Then, after the Splib.load_code call, we modify the file to contain:
+
+    class Foo
+        def untest
+            puts 'UnTest'
+        end
+    end
+
+Okay, now we proceed:
+
+    require 'splib'
+    Splib.load :CodeReloader, :Constants
+
+    mod = Splib.load_code('file.rb')
+    foo = Splib.find_const('Foo', [mod]).new
+    p foo.respond_to?(:test)
+    puts foo.test
+    mod = Splib.reload_code(mod)
+    foo = Splib.find_const('Foo', [mod]).new
+    p foo.respond_to?(:test)
+    p foo.respond_to?(:untest)
+    puts foo.untest
+
+    =>
+        true
+        Test
+        false
+        true
+        UnTest
 
 == Last remarks
 
