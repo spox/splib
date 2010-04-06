@@ -9,16 +9,16 @@ class SleepTest < Test::Unit::TestCase
     end
     
     def test_sleep_valid
-        assert(Kernel.sleep(0.5).between?(0.45, 0.55))
-        assert(Kernel.sleep(0.05).between?(0.04, 0.06))
+        assert(Splib.sleep(0.5).between?(0.45, 0.55))
+        assert(Splib.sleep(0.05).between?(0.04, 0.06))
     end
 
     def test_sleep_invalid
         assert_raise(TypeError) do
-            Kernel.sleep(:foo)
+            Splib.sleep(:foo)
         end
         assert_raise(ArgumentError) do
-            Kernel.sleep(-1)
+            Splib.sleep(-1)
         end
     end
 end
