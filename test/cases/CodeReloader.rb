@@ -28,7 +28,7 @@ class CodeReloaderTest < Test::Unit::TestCase
         assert(!obj.respond_to?(:feebar))
         assert_equal('hello world', obj.foobar)
         FileUtils.cp @s2, @s
-        Splib.reload_code(holder)
+        holder = Splib.reload_code(holder)
         klass = Splib.find_const('Fu::Bar', [holder])
         obj = klass.new
         assert(obj.respond_to?(:feebar))
