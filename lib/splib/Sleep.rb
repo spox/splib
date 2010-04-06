@@ -1,10 +1,9 @@
-module Kernel
+module Splib
 class << self
     # secs:: Number of seconds to sleep (Use float to provide msec sleep)
     # Modified sleep method to use select() to provide msec level
     # sleep times
-    def sleep(secs)
-        start = Time.now.to_f
+    def sleep(secs=nil)
         unless(secs.nil?)
             begin
                 secs = secs.to_f
@@ -13,7 +12,7 @@ class << self
             end
         end
         start = Time.now.to_f
-        raise 'Failed to sleep' if select(nil, nil, nil, secs) == -1
+        select(nil, nil, nil, secs)
         Time.now.to_f - start
     end
 end
