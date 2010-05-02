@@ -38,6 +38,14 @@ class BasicTimerTest < Test::Unit::TestCase
     end
 
     def test_remove_multiple
-        
+        output = Queue.new
+        a = @timer.add(:period => 0.1){ output << :foo }
+        b = @timer.add(:period => 0.2){ output << :foo }
+        c = @timer.add(:period => 0.1){ output << :foo }
+        sleep(0.21)
+        assert_equal(5, output.size)
+        @timer.remove(b)
+        sleep(0.21)
+        assert_equal(9, output.size)
     end
 end
