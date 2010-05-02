@@ -5,6 +5,8 @@ module Splib
     # Basic exception to wakeup a monitor timer
     class Wakeup < Exception
     end
+    # Modified Monitor class. Positives included JRuby support, single
+    # thread timing
     class Monitor
         # Create a new Monitor
         def initialize
