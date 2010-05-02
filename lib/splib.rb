@@ -1,5 +1,6 @@
 module Splib
     LIBS = [:Array,
+            :BasicTimer,
             :CodeReloader,
             :Constants,
             :Conversions,
