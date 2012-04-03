@@ -7,8 +7,8 @@ class CodeReloaderTest < Test::Unit::TestCase
     @s = File.expand_path("#{__FILE__}/../../samplecode.rb")
     @s1 = File.expand_path("#{__FILE__}/../../samplecode1.rb")
     @s2 = File.expand_path("#{__FILE__}/../../samplecode2.rb")
-    Splib.load :CodeReloader
-    Splib.load :Constants
+    Splib.load :code_reloader
+    Splib.load :constants
     FileUtils.cp @s1, @s
   end
   def teardown

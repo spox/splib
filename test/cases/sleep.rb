@@ -5,7 +5,7 @@ require 'splib'
 
 class SleepTest < Test::Unit::TestCase
   def setup
-    Splib.load :Sleep
+    Splib.load :sleep
   end
   
   def test_sleep_valid

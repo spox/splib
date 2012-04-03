@@ -3,7 +3,7 @@ require 'test/unit'
 
 class FloatTest < Test::Unit::TestCase
   def setup
-    Splib.load :Float
+    Splib.load :float
   end
   
   def test_delta

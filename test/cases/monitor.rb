@@ -2,8 +2,8 @@ require 'splib'
 require 'test/unit'
 
 class MonitorTest < Test::Unit::TestCase
-  Splib.load :Monitor
-  Splib.load :Sleep
+  Splib.load :monitor
+  Splib.load :sleep
   def setup
     @monitor = Splib::Monitor.new
   end
@@ -22,7 +22,9 @@ class MonitorTest < Test::Unit::TestCase
     t = []
     o = Queue.new
     5.times{ t << Thread.new{ @monitor.wait(0.1); o << 1 } }
-    Splib.sleep(0.3)
+    x = Splib.sleep(0.3)
+    puts "I slept for: #{x} seconds}"
+    sleep(2)
     assert_equal(5, o.size)
   end
 

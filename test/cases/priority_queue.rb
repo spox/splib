@@ -3,7 +3,7 @@ require 'test/unit'
 
 class PriorityQueueTest < Test::Unit::TestCase
   def setup
-    Splib.load :PriorityQueue
+    Splib.load :priority_queue
   end
 
   def test_direct

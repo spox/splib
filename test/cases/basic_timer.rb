@@ -1,7 +1,7 @@
 $:.unshift File.join(File.dirname(__FILE__),'..','lib')
 
 require 'test/unit'
-require 'splib/BasicTimer'
+require 'splib/basic_timer'
 require 'thread'
 
 class BasicTimerTest < Test::Unit::TestCase
@@ -34,7 +34,7 @@ class BasicTimerTest < Test::Unit::TestCase
     @timer.add(:period => 0.2){ output << :fee }
     @timer.add(:period => 0.5){ output << :fubar }
     sleep(0.51)
-    assert_equal(7, output.size)
+    assert_equal(8, output.size)
   end
 
   def test_remove_multiple

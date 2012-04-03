@@ -10,7 +10,7 @@ end
 
 class ConstantsTest < Test::Unit::TestCase
   def setup
-    Splib.load :Constants
+    Splib.load :constants
   end
   def test_find_const
     mod = Module.new

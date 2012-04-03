@@ -1,7 +1,7 @@
 require 'thread'
 
 module Splib
-  Splib.load :Sleep
+  Splib.load :sleep
   # Basic exception to wakeup a monitor timer
   class Wakeup < Exception
   end

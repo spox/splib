@@ -3,7 +3,7 @@ require 'test/unit'
 
 class HumanIdealRandomIteratorTest < Test::Unit::TestCase
   def setup
-    Splib.load :HumanIdealRandomIterator
+    Splib.load :human_ideal_random_iterator
   end
 
   def test_iterator

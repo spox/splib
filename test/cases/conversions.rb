@@ -3,7 +3,7 @@ require 'test/unit'
 
 class ConversionsTest < Test::Unit::TestCase
   def setup
-    Splib.load :Conversions
+    Splib.load :conversions
   end
 
   def test_format_seconds

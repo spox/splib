@@ -1,7 +1,7 @@
 require 'splib'
 
 module Splib
-  Splib.load :Sleep
+  Splib.load :sleep
 
   # Used to wakeup timer
   class Wakeup < Exception

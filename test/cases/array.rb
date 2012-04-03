@@ -3,7 +3,7 @@ require 'test/unit'
 
 class ArrayTest < Test::Unit::TestCase
   def setup
-    Splib.load :Array
+    Splib.load :array
   end
 
   def test_flatten_original

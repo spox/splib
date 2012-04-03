@@ -1,4 +1,4 @@
-Splib.load :Monitor
+Splib.load :monitor
 
 module Splib
   # Exception raised when queue is empty

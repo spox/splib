@@ -3,7 +3,7 @@ require 'test/unit'
 
 class UrlShortenersTest < Test::Unit::TestCase
   def setup
-    Splib.load :UrlShorteners
+    Splib.load :url_shorteners
   end
 
   def test_tiny_url
