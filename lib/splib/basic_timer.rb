@@ -23,7 +23,10 @@ module Splib
     # Add new item to timer
     def add(args={}, &block)
       Thread.exclusive do
-        @items[block] = {:remaining => args[:period].to_f, :reset => args[:once] ? 0 : args[:period].to_f}
+        @items[block] = {
+          :remaining => args[:period].to_f, 
+          :reset => args[:once] ? 0 : args[:period].to_f
+        }
       end
       retime
       block
@@ -50,14 +53,14 @@ module Splib
     def tick(secs)
       completed = []
       delete = []
-      @items.each_pair do |proc,times|
-        @items[proc][:remaining] = times[:remaining].to_f - secs.to_f
-        if(@items[proc][:remaining] <= 0)
-          completed << proc
-          if(@items[proc][:reset] > 0)
-            @items[proc][:remaining] = @items[proc][:reset]
+      @items.each_pair do |_proc,times|
+        @items[_proc][:remaining] = times[:remaining].to_f - secs.to_f
+        if(@items[_proc][:remaining] <= 0)
+          completed << _proc
+          if(@items[_proc][:reset] > 0)
+            @items[_proc][:remaining] = @items[_proc][:reset]
           else
-            delete << proc
+            delete << _proc
           end
         end
       end
