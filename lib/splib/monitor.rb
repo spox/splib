@@ -181,13 +181,13 @@ module Splib
         begin
           until(@stop) do
             cur = []
-            t = 0
+            t = 0.0
             Thread.exclusive do
               t = @timers.values.min
               cur = @timers.dup
             end
-            t = 0 if !t.nil? && t < 0
-            a = 0
+            t = 0.0 if !t.nil? && t < 0.0
+            a = 0.0
             begin
               a = Splib.sleep(t)
             rescue Wakeup
@@ -197,7 +197,7 @@ module Splib
               Thread.exclusive do
                 cur.each_pair do |thread, value|
                   value -= a
-                  if(value <= 0)
+                  if(value <= 0.0)
                     thread.wakeup
                     @timers.delete(thread)
                   else
