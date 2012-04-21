@@ -19,11 +19,18 @@ class MonitorTest < Test::Unit::TestCase
   end
 
   def test_wait_timeout
+    @monitor = Splib::Monitor.new
     t = []
     o = Queue.new
-    5.times{ t << Thread.new{ @monitor.wait(0.1); o << 1 } }
-    x = Splib.sleep(0.3)
-    sleep(2)
+    5.times do
+      t << Thread.new do
+        @monitor.wait(rand(0.9))
+        o << 1
+      end
+    end
+    t.each do |th|
+      th.join(1)
+    end
     assert_equal(5, o.size)
   end
 
@@ -182,9 +189,9 @@ class MonitorTest < Test::Unit::TestCase
   end
 
   def test_try_lock
+    @monitor = Splib::Monitor.new
     assert(@monitor.try_lock)
     assert(@monitor.locked?)
-    assert(@monitor.try_lock)
     Thread.new{ assert(!@monitor.try_lock) }
     @monitor.unlock
     assert(!@monitor.locked?)
