@@ -20,11 +20,7 @@ module Splib
   # Execute system command. This is a wrapper method
   # that will redirect to the proper command
   def self.exec(*args)
-    if(RUBY_PLATFORM == 'java')
-      thread_exec(*args)
-    else
-      standard_exec(*args)
-    end
+    standard_exec(*args)
   end
   
   # command:: command to execute
@@ -39,37 +35,35 @@ module Splib
     priority = priority.to_i
     output = []
     pro = nil
+    to_run = lambda do
+      pro = IO.popen(command)
+      @@processes << pro
+      if(priority > 0)
+        Process.setpriority(Process::PRIO_PROCESS, pro.pid, priority)
+      end
+      until(pro.closed? || pro.eof?)
+        output << pro.getc.chr
+        if(maxbytes > 0 && output.size > maxbytes)
+          raise IOError.new("Maximum allowed output bytes exceeded. (#{maxbytes} bytes)")
+        end
+      end
+    end
     begin
       if(timeout > 0)
         Timeout::timeout(timeout) do
-          pro = IO.popen(command)
-          @@processes << pro
-          if(priority > 0)
-            Process.setpriority(Process::PRIO_PROCESS, pro.pid, priority)
-          end
-          until(pro.closed? || pro.eof?)
-            output << pro.getc.chr
-            if(maxbytes > 0 && output.size > maxbytes)
-              raise IOError.new("Maximum allowed output bytes exceeded. (#{maxbytes} bytes)")
-            end
-          end
+          to_run.call
         end
       else
-        pro = IO.popen(command)
-        @@processes << pro
-        until(pro.closed? || pro.eof?)
-          output << pro.getc.chr
-          if(maxbytes > 0 && output.size > maxbytes)
-            raise IOError.new("Maximum allowed output bytes exceeded. (#{maxbytes} bytes)")
-          end
-        end
+        to_run.call
       end
-      output = output.join('')
     ensure
-      Process.kill('KILL', pro.pid) if Process.waitpid2(pro.pid, Process::WNOHANG).nil? # make sure the process is dead
-      @@processes.delete(pro)
+      begin
+        Process.kill('KILL', pro.pid) if Process.waitpid2(pro.pid, Process::WNOHANG).nil? # make sure the process is dead
+        @@processes.delete(pro)
+      rescue Errno::ESRCH  
+      end
     end
-    return output
+    output.join('')
   end
   # Used for the thread_exec method to notify of completion
   class Complete < StandardError
