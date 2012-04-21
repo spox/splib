@@ -23,7 +23,6 @@ class MonitorTest < Test::Unit::TestCase
     o = Queue.new
     5.times{ t << Thread.new{ @monitor.wait(0.1); o << 1 } }
     x = Splib.sleep(0.3)
-    puts "I slept for: #{x} seconds}"
     sleep(2)
     assert_equal(5, o.size)
   end
