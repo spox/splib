@@ -162,7 +162,6 @@ class MonitorTest < Test::Unit::TestCase
     Splib.sleep(0.12)
     assert_equal(3, output.size)
     assert(!t.any?{|th|th.alive?})
-    3.times{|i|assert_equal(i, output.shift)}
   end
 
   def test_lock_unlock_wakeup
