@@ -20,7 +20,7 @@ module Splib
   # Execute system command. This is a wrapper method
   # that will redirect to the proper command
   def self.exec(*args)
-    if(true) #RUBY_PLATFORM == 'java')
+    if(RUBY_PLATFORM == 'java')
       thread_exec(*args)
     else
       standard_exec(*args)
