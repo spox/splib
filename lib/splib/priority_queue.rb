@@ -1,4 +1,4 @@
-Splib.load :monitor
+require 'celluloid'
 
 module Splib
   # Exception raised when queue is empty
@@ -11,6 +11,9 @@ module Splib
   # NOTE: Design help from the great Ryan "pizza_" Flynn
   class PriorityQueue
 
+    include Celluloid
+    attr_reader :signaled
+
     # args:: config arguments
     #   :raise_on_empty
     # whocares:: lambda{|target| true||false}
@@ -20,7 +23,6 @@ module Splib
       @whocares = whocares
       @target_queues = {}
       @queues = {:PRIORITY => [], :NEW => [], :NORMAL => [], :WHOCARES => []}
-      @lock = Splib::Monitor.new
     end
     
     # target:: target queue
@@ -30,21 +32,19 @@ module Splib
     # how to queue the item based on the target
     def prioritized_queue(target, item)
       raise NameError.new('The target :internal_prio is a restricted target') if target == :internal_prio
-      @lock.synchronize do
-        @target_queues[target] = [] unless @target_queues[target]
-        if(@whocares && @whocares.call(target))
-          @target_queues[target] << item
-          add_queue(:WHOCARES, @target_queues[target])
+      @target_queues[target] = [] unless @target_queues[target]
+      if(@whocares && @whocares.call(target))
+        @target_queues[target] << item
+        add_queue(:WHOCARES, @target_queues[target])
+      else
+        @target_queues[target] << item
+        if(@target_queues[target].size < 2)
+          add_queue(:NEW, @target_queues[target])
         else
-          @target_queues[target] << item
-          if(@target_queues[target].size < 2)
-            add_queue(:NEW, @target_queues[target])
-          else
-            add_queue(:NORMAL, @target_queues[target])
-          end
+          add_queue(:NORMAL, @target_queues[target])
         end
-        @lock.signal
       end
+      signal :new_item
       item
     end
     
@@ -52,12 +52,10 @@ module Splib
     # This will add item to the PRIORITY queue which gets
     # sent before all other items.
     def direct_queue(message)
-      @lock.synchronize do
-        @target_queues[:internal_prio] = [] unless @target_queues[:internal_prio]
-        @target_queues[:internal_prio] << message
-        add_queue(:PRIORITY, @target_queues[:internal_prio])
-        @lock.signal
-      end
+      @target_queues[:internal_prio] = [] unless @target_queues[:internal_prio]
+      @target_queues[:internal_prio] << message
+      add_queue(:PRIORITY, @target_queues[:internal_prio])
+      signal :new_item
       message
     end
 
@@ -68,23 +66,21 @@ module Splib
     # left.
     def pop
       m = nil
-      @lock.synchronize do
-        [:PRIORITY, :NEW, :NORMAL, :WHOCARES].each do |k|
-          unless(@queues[k].empty?)
-            q = @queues[k].shift
-            unless(q.empty?)
-              m = q.shift
-              add_queue(k, q) unless(q.empty?)
-              break
-            end
+      [:PRIORITY, :NEW, :NORMAL, :WHOCARES].each do |k|
+        unless(@queues[k].empty?)
+          q = @queues[k].shift
+          unless(q.empty?)
+            m = q.shift
+            add_queue(k, q) unless(q.empty?)
+            break
           end
         end
       end
       unless(m)
         if(@raise)
-          raise EmptyQueue.new('Queue is currently empty')
+          abort(EmptyQueue.new('Queue is currently empty'))
         else
-          @lock.wait_while{ empty? }
+          wait :new_item
           m = pop
         end
       end
@@ -93,7 +89,7 @@ module Splib
 
     # Returns true if queue is empty
     def empty?
-      @lock.synchronize{@target_queues.values.find{|n|!n.empty?}.nil?}
+      @target_queues.values.find{|n|!n.empty?}.nil?
     end
 
     alias :push :prioritized_queue

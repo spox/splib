@@ -9,7 +9,8 @@ spec = Gem::Specification.new do |s|
   s.rdoc_options    = %w(--title splib --main README.rdoc --line-numbers)
   s.extra_rdoc_files  = %w(README.rdoc CHANGELOG)
   s.require_paths   = %w(lib)
-  s.required_ruby_version = '>= 1.8.7'
+  s.required_ruby_version = '>= 1.9.3'
+  s.add_dependency 'celluloid'
   s.homepage      = %q(http://github.com/spox/splib)
   s.description     = "The spox library contains various useful tools to help you in your day to day life. Like a trusty pocket knife, only more computery."
 end
